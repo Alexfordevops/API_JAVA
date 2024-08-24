@@ -1,6 +1,7 @@
 package App.Java.controllers;
 
 import App.Java.dtos.ProductRecordDto;
+import App.Java.exceptions.ProductNullException;
 import App.Java.models.ProductModel;
 import App.Java.services.ProductService;
 import jakarta.validation.Valid;
@@ -19,9 +20,10 @@ public class ProductController {
     ProductService productService;
 
     @PostMapping("/products")
-    public ResponseEntity<ProductModel> createProductController(@Valid @RequestBody ProductRecordDto productRecordDto){
+    public ResponseEntity<ProductModel> createProductController(@Valid @RequestBody ProductRecordDto productRecordDto) throws ProductNullException {
         return productService.createProductService(productRecordDto);
     }
+
     @GetMapping("/products")
     public ResponseEntity<List<ProductModel>> getProductController(){
         return productService.getProductService();
@@ -41,5 +43,22 @@ public class ProductController {
     public ResponseEntity<Object> deleteProductByIdController(@PathVariable(value="id") UUID id){
         return productService.deleteProductByIdService(id);
 
+    }
+
+    @DeleteMapping("/products")
+    public ResponseEntity<Object> deleteAllProductsController(){
+        return productService.deleteAllProductsService();
+    }
+
+    @PostMapping("/test/1")
+    public ResponseEntity<Object> postHandlerController(@RequestBody ProductModel productModel) throws Exception{
+        productModel = productService.postHandlerService(productModel);
+
+        return ResponseEntity.ok().body(productModel);
+    }
+
+    @DeleteMapping("/test/2/{id}")
+    public ResponseEntity<Object> deleteByIdHandlerController(@PathVariable(value = "id") UUID id) throws Exception {
+        return productService.deleteByIdHandlerService(id);
     }
 }

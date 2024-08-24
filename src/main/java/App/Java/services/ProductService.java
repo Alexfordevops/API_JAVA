@@ -1,9 +1,11 @@
 package App.Java.services;
 
 import App.Java.dtos.ProductRecordDto;
+import App.Java.exceptions.InvalidQuantityException;
+import App.Java.exceptions.ProductNotFoundException;
+import App.Java.exceptions.ProductNullException;
 import App.Java.models.ProductModel;
 import App.Java.repositories.ProductRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,7 +37,7 @@ public class ProductService {
     public ResponseEntity<Object> getProductByIdService(UUID id){
         Optional<ProductModel> product0 = productRepository.findById(id);
         if(product0.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
         }
         return ResponseEntity.status(HttpStatus.OK).body(product0.get());
         }
@@ -43,7 +45,7 @@ public class ProductService {
     public ResponseEntity<Object> updateProductByIdService(UUID id, ProductRecordDto productRecordDto ){
         Optional<ProductModel> productO = productRepository.findById(id);
         if(productO.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
         }
         var productModel = productO.get();
         BeanUtils.copyProperties(productRecordDto, productModel);
@@ -53,10 +55,32 @@ public class ProductService {
     public ResponseEntity<Object> deleteProductByIdService(UUID id){
         Optional<ProductModel> productO = productRepository.findById(id);
         if(productO.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
         }
         productRepository.delete(productO.get());
-        return ResponseEntity.status(HttpStatus.OK).body("User deleted successfuly");
+        return ResponseEntity.status(HttpStatus.OK).body("Product deleted successfuly");
+    }
+    public ResponseEntity<Object> deleteAllProductsService(){
+        productRepository.deleteAll();
+        return ResponseEntity.status(HttpStatus.OK).body("All products deleted successfuly");
     }
 
+    public ProductModel postHandlerService(ProductModel productModel) throws Exception{
+       if(productModel.getProductName().isBlank() || productModel.getProductOrigin().isBlank()) {
+           throw new ProductNullException();
+       } else if (productModel.getProductQuantity() < 1) {
+           throw new InvalidQuantityException();
+       }
+       return productRepository.save(productModel);
+    }
+
+    public ResponseEntity<Object> deleteByIdHandlerService(UUID id) throws Exception{
+        Optional<ProductModel> productO = productRepository.findById(id);
+        if(productO.isEmpty()){
+            throw new ProductNotFoundException();
+        }
+        productRepository.deleteById(id);
+        return ResponseEntity.status(HttpStatus.OK).body("Product Deleted Successfuly");
+
+    }
 }
